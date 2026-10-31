@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { MapPin, CreditCard } from "lucide-react";
 
-function Checkout({ cart, onPlaceOrder, goBack }) {
+function Checkout({ cart, settings, onPlaceOrder, goBack }) {
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -10,21 +10,43 @@ function Checkout({ cart, onPlaceOrder, goBack }) {
     address: "",
     city: "",
     pincode: "",
-    payment: "COD"
+    payment: "COD",
   });
 
-  const total = cart.reduce(
+  // Calculate cart subtotal
+  const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
 
+  // Calculate delivery charge
+  const freeDeliveryMinimum = Number(
+    settings?.freeDeliveryMinimum ?? 1000
+  );
+
+  const standardDeliveryCharge = Number(
+    settings?.deliveryCharge ?? 50
+  );
+
+  const deliveryCharge =
+    subtotal >= freeDeliveryMinimum
+      ? 0
+      : standardDeliveryCharge;
+
+  // Calculate final amount
+  const finalTotal = subtotal + deliveryCharge;
+
+  // Handle form inputs
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
+  // Handle order submission
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -38,9 +60,11 @@ function Checkout({ cart, onPlaceOrder, goBack }) {
       return;
     }
 
-    onPlaceOrder(form);
+    // Send customer details and final amount to App.jsx
+    onPlaceOrder(form, finalTotal);
   };
 
+  // Empty cart check
   if (cart.length === 0) {
     return (
       <section className="checkout-page">
@@ -55,6 +79,7 @@ function Checkout({ cart, onPlaceOrder, goBack }) {
       <h1>Checkout</h1>
 
       <div className="checkout-layout">
+        {/* Delivery Address and Payment Form */}
         <form
           className="checkout-form"
           onSubmit={handleSubmit}
@@ -73,6 +98,7 @@ function Checkout({ cart, onPlaceOrder, goBack }) {
           />
 
           <input
+            type="tel"
             name="phone"
             placeholder="10-digit Mobile Number"
             value={form.phone}
@@ -143,32 +169,73 @@ function Checkout({ cart, onPlaceOrder, goBack }) {
               checked={form.payment === "ONLINE"}
               onChange={handleChange}
             />
-            Online Payment (Demo only)
+            Online Payment
           </label>
 
-          <button className="checkout-button" type="submit">
+          <button
+            className="checkout-button"
+            type="submit"
+          >
             Confirm Order
           </button>
         </form>
 
+        {/* Order Summary */}
         <div className="checkout-summary">
           <h2>Order Summary</h2>
 
           {cart.map((item) => (
             <p key={item.id}>
               {item.name} × {item.quantity}
+
               <strong>
-                ₹{(item.price * item.quantity).toLocaleString("en-IN")}
+                ₹
+                {(item.price * item.quantity).toLocaleString(
+                  "en-IN"
+                )}
               </strong>
             </p>
           ))}
 
           <hr />
 
+          <p>
+            Subtotal
+
+            <strong>
+              ₹{subtotal.toLocaleString("en-IN")}
+            </strong>
+          </p>
+
+          <p>
+            Delivery Charge
+
+            <strong>
+              {deliveryCharge === 0
+                ? "FREE"
+                : `₹${deliveryCharge.toLocaleString("en-IN")}`}
+            </strong>
+          </p>
+
+          <hr />
+
           <h3>
             Total Amount
-            <strong>₹{total.toLocaleString("en-IN")}</strong>
+
+            <strong>
+              ₹{finalTotal.toLocaleString("en-IN")}
+            </strong>
           </h3>
+
+          {deliveryCharge > 0 && (
+            <p className="free-delivery-message">
+              Add ₹
+              {(freeDeliveryMinimum - subtotal).toLocaleString(
+                "en-IN"
+              )}{" "}
+              more to get free delivery.
+            </p>
+          )}
         </div>
       </div>
     </section>

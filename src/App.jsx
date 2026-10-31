@@ -27,21 +27,43 @@ function App() {
   // ---------------- STATE DECLARATIONS ----------------
 
   const [search, setSearch] = useState("");
+
   const [productList, setProductList] = useLocalStorage(
-  "shopzone-products",
-  products
-);
-  
+    "shopzone-products",
+    products
+  );
+
+  const [categoryList, setCategoryList] = useLocalStorage(
+    "shopzone-categories",
+    ["Mobiles", "Electronics", "Fashion", "Home"]
+  );
+
+  const [storeSettings, setStoreSettings] = useLocalStorage(
+    "shopzone-settings",
+    {
+      storeName: "ShopZone",
+      storeEmail: "support@shopzone.com",
+      contactNumber: "",
+      storeAddress: "",
+      deliveryCharge: 50,
+      freeDeliveryMinimum: 1000,
+    }
+  );
+
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sort, setSort] = useState("default");
 
   const [cart, setCart] = useLocalStorage("shopzone-cart", []);
+
   const [wishlist, setWishlist] = useLocalStorage(
     "shopzone-wishlist",
     []
   );
 
-  const [users, setUsers] = useLocalStorage("shopzone-users", []);
+  const [users, setUsers] = useLocalStorage(
+    "shopzone-users",
+    []
+  );
 
   const [currentUser, setCurrentUser] = useLocalStorage(
     "shopzone-current-user",
@@ -194,26 +216,67 @@ function App() {
 
   // ---------------- PLACE ORDER ----------------
 
-  const placeOrder = (customer) => {
-    if (!currentUser || cart.length === 0) return;
+  const placeOrder = (customer, finalTotal) => {
+    if (!currentUser || cart.length === 0) {
+      return;
+    }
 
-    const total = cart.reduce(
+    // Calculate subtotal
+    const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
 
-   const newOrder = {
-  id: "SZ" + Date.now(),
-  userId: currentUser.id,
-  customer,
-  items: cart,
-  total,
-  date: new Date().toLocaleDateString(),
-  status: "Placed"
-};
+    // Validate final amount
+    const freeDeliveryMinimum = Number(
+      storeSettings.freeDeliveryMinimum ?? 1000
+    );
+
+    const standardDeliveryCharge = Number(
+      storeSettings.deliveryCharge ?? 50
+    );
+
+    const deliveryCharge =
+      subtotal >= freeDeliveryMinimum
+        ? 0
+        : standardDeliveryCharge;
+
+    const calculatedTotal = subtotal + deliveryCharge;
+
+    // Use the same total calculated in Checkout
+    // Fall back to the locally calculated total if needed
+    const orderTotal =
+      Number.isFinite(Number(finalTotal)) &&
+      Number(finalTotal) === calculatedTotal
+        ? calculatedTotal
+        : calculatedTotal;
+
+    // Create new order
+    const newOrder = {
+      id: "SZ" + Date.now(),
+      userId: currentUser.id,
+      customer,
+      items: [...cart],
+      subtotal,
+      deliveryCharge,
+      total: orderTotal,
+      status: "Placed",
+      date: new Date().toLocaleDateString(),
+      createdAt: new Date().toISOString(),
+    };
+
+    // Save order
     setOrder(newOrder);
-    setOrders((previous) => [newOrder, ...previous]);
+
+    setOrders((previous) => [
+      newOrder,
+      ...previous,
+    ]);
+
+    // Clear cart
     setCart([]);
+
+    // Navigate to success page
     setPage("success");
   };
 
@@ -242,14 +305,18 @@ function App() {
 
     return (
       <AdminDashboard
-  products={productList}
-  setProducts={setProductList}
-  users={users}
-  orders={orders}
-   setOrders={setOrders}
-  onLogout={handleAdminLogout}
-  goHome={goHome}
-/>
+        products={productList}
+        setProducts={setProductList}
+        users={users}
+        orders={orders}
+        setOrders={setOrders}
+        categories={categoryList}
+        setCategories={setCategoryList}
+        settings={storeSettings}
+        setSettings={setStoreSettings}
+        onLogout={handleAdminLogout}
+        goHome={goHome}
+      />
     );
   }
 
@@ -257,6 +324,8 @@ function App() {
 
   return (
     <div className="app">
+
+      {/* HEADER */}
 
       <Header
         search={search}
@@ -266,7 +335,10 @@ function App() {
         setPage={setPage}
         currentUser={currentUser}
         onLogout={handleLogout}
+        storeName={storeSettings.storeName}
       />
+
+      {/* NAVBAR */}
 
       <Navbar
         selectedCategory={selectedCategory}
@@ -294,6 +366,7 @@ function App() {
             <div className="section-heading">
               <div>
                 <h2>Explore Our Products</h2>
+
                 <p>
                   Discover the best products at amazing prices.
                 </p>
@@ -358,26 +431,28 @@ function App() {
 
       {/* WISHLIST */}
 
-     {page === "wishlist" && (
-  <section className="products-section">
-    <h2>My Wishlist</h2>
+      {page === "wishlist" && (
+        <section className="products-section">
+          <h2>My Wishlist</h2>
 
-    <div className="product-grid">
-      {productList
-        .filter((product) => wishlist.includes(product.id))
-        .map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            addToCart={addToCart}
-            wishlist={wishlist}
-            toggleWishlist={toggleWishlist}
-            openProduct={openProduct}
-          />
-        ))}
-    </div>
-  </section>
-)}
+          <div className="product-grid">
+            {productList
+              .filter((product) =>
+                wishlist.includes(product.id)
+              )
+              .map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  addToCart={addToCart}
+                  wishlist={wishlist}
+                  toggleWishlist={toggleWishlist}
+                  openProduct={openProduct}
+                />
+              ))}
+          </div>
+        </section>
+      )}
 
       {/* LOGIN AND REGISTER */}
 
@@ -435,6 +510,7 @@ function App() {
         currentUser ? (
           <Checkout
             cart={cart}
+            settings={storeSettings}
             onPlaceOrder={placeOrder}
             goBack={() => setPage("cart")}
           />
@@ -457,7 +533,9 @@ function App() {
         />
       )}
 
-      <Footer />
+      {/* FOOTER */}
+
+      <Footer settings={storeSettings} />
 
     </div>
   );

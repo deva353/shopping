@@ -19,6 +19,8 @@ import {
 
 import AdminSidebar from "./AdminSidebar";
 import AdminHeader from "./AdminHeader";
+import SalesReports from "./SalesReports";
+import AdminSettings from "./AdminSettings";
 import "./Admin.css";
 function AdminDashboard({
   products = [],
@@ -26,8 +28,11 @@ function AdminDashboard({
   users = [],
   orders = [],
   setOrders,
+  categories = [],
+  setCategories,
   onLogout,
-  goHome
+  goHome,settings,
+setSettings,
 }) 
 
  {
@@ -37,6 +42,8 @@ function AdminDashboard({
 const [searchOrder, setSearchOrder] = useState("");
 const [searchCustomer, setSearchCustomer] = useState("");
 const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+const [categoryName, setCategoryName] = useState("");
+const [editingCategory, setEditingCategory] = useState(null);
   const [searchProduct, setSearchProduct] = useState("");
 
   const [showProductForm, setShowProductForm] = useState(false);
@@ -137,6 +144,214 @@ const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
   alert("Order status updated successfully!");
 };
+
+const handleSaveCategory = (e) => {
+  e.preventDefault();
+
+  const name = categoryName.trim();
+
+  if (!name) {
+    alert("Please enter a category name.");
+    return;
+  }
+
+  const alreadyExists = categories.some(
+    (category) =>
+      category.toLowerCase() === name.toLowerCase() &&
+      category !== editingCategory
+  );
+
+  if (alreadyExists) {
+    alert("This category already exists.");
+    return;
+  }
+
+  if (editingCategory !== null) {
+    // Rename category and update related products
+    setCategories((previous) =>
+      previous.map((category) =>
+        category === editingCategory ? name : category
+      )
+    );
+
+    setProducts((previous) =>
+      previous.map((product) =>
+        product.category === editingCategory
+          ? { ...product, category: name }
+          : product
+      )
+    );
+
+    alert("Category updated successfully!");
+  } else {
+    // Add category
+    setCategories((previous) => [...previous, name]);
+
+    alert("Category added successfully!");
+  }
+
+  setCategoryName("");
+  setEditingCategory(null);
+};
+
+const handleEditCategory = (category) => {
+  setEditingCategory(category);
+  setCategoryName(category);
+};
+
+const handleDeleteCategory = (category) => {
+  const productsInCategory = products.filter(
+    (product) => product.category === category
+  );
+
+  if (productsInCategory.length > 0) {
+    alert(
+      `Cannot delete ${category}. It contains ${productsInCategory.length} products. Move or delete those products first.`
+    );
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Are you sure you want to delete ${category}?`
+  );
+
+  if (!confirmed) return;
+
+  setCategories((previous) =>
+    previous.filter((item) => item !== category)
+  );
+
+  alert("Category deleted successfully!");
+};
+if (activePage === "settings") {
+  return (
+    <AdminSettings
+      settings={settings}
+      setSettings={setSettings}
+    />
+  );
+}
+
+const renderCategoryManagement = () => (
+  <div className="admin-products-page">
+
+    <div className="admin-products-heading">
+      <div>
+        <h2>Category Management</h2>
+        <p>Create and manage your product categories.</p>
+      </div>
+    </div>
+
+    {/* ADD / EDIT CATEGORY */}
+
+    <form
+      className="admin-category-form"
+      onSubmit={handleSaveCategory}
+    >
+      <div className="admin-form-group">
+        <label>
+          {editingCategory !== null
+            ? "Edit Category"
+            : "New Category"}
+        </label>
+
+        <input
+          type="text"
+          value={categoryName}
+          onChange={(e) => setCategoryName(e.target.value)}
+          placeholder="Enter category name"
+          required
+        />
+      </div>
+
+      <div className="admin-category-buttons">
+        <button type="submit" className="admin-save-btn">
+          <Save size={17} />
+          {editingCategory !== null ? "Update" : "Add Category"}
+        </button>
+
+        {editingCategory !== null && (
+          <button
+            type="button"
+            className="admin-cancel-btn"
+            onClick={() => {
+              setEditingCategory(null);
+              setCategoryName("");
+            }}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+
+    {/* CATEGORY TABLE */}
+
+    <div className="admin-products-table-panel">
+      <div className="admin-products-table-heading">
+        <h3>All Categories</h3>
+        <span>{categories.length} categories</span>
+      </div>
+
+      {categories.length === 0 ? (
+        <div className="admin-empty">
+          <Package size={40} />
+          <p>No categories available.</p>
+        </div>
+      ) : (
+        <div className="admin-table-wrapper">
+          <table className="admin-table">
+
+            <thead>
+              <tr>
+                <th>Category Name</th>
+                <th>Total Products</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {categories.map((category) => {
+                const count = products.filter(
+                  (product) => product.category === category
+                ).length;
+
+                return (
+                  <tr key={category}>
+                    <td><strong>{category}</strong></td>
+                    <td>{count}</td>
+
+                    <td>
+                      <div className="admin-product-actions">
+                        <button
+                          type="button"
+                          className="admin-edit-btn"
+                          onClick={() => handleEditCategory(category)}
+                        >
+                          <Pencil size={17} />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="admin-delete-btn"
+                          onClick={() => handleDeleteCategory(category)}
+                        >
+                          <Trash2 size={17} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+
+          </table>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 
 const renderCustomerManagement = () => {
   const filteredCustomers = users.filter((user) => {
@@ -609,19 +824,21 @@ const renderOrderManagement = () => {
             </div>
 
             <div className="admin-form-group">
-              <label>Category</label>
+  <label>Category</label>
 
-              <select
-                name="category"
-                value={productForm.category}
-                onChange={handleProductInput}
-              >
-                <option value="Mobiles">Mobiles</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Fashion">Fashion</option>
-                <option value="Home">Home</option>
-              </select>
-            </div>
+  <select
+    name="category"
+    value={productForm.category}
+    onChange={handleProductInput}
+    required
+  >
+    {categories.map((category) => (
+      <option key={category} value={category}>
+        {category}
+      </option>
+    ))}
+  </select>
+</div>
 
             <div className="admin-form-group">
               <label>Selling Price (₹)</label>
@@ -857,7 +1074,16 @@ const renderOrderManagement = () => {
 if (activePage === "customers") {
   return renderCustomerManagement();
 }
+if (activePage === "categories") {
+  return renderCategoryManagement();
+}
+if (activePage === "orders") return renderOrderManagement();
+if (activePage === "customers") return renderCustomerManagement();
+if (activePage === "categories") return renderCategoryManagement();
 
+if (activePage === "reports") {
+  return <SalesReports orders={orders} />;
+}
     // Other placeholder pages
     if (activePage !== "dashboard") {
 

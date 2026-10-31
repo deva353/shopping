@@ -14,7 +14,8 @@ function Header({
   wishlistCount,
   setPage,
   currentUser,
-  onLogout
+  onLogout,
+    storeName = "ShopZone",
 }) {
   return (
     <header className="header">
@@ -26,7 +27,7 @@ function Header({
         onClick={() => setPage("home")}
         
       >
-        <h2>Shop<span>Zone</span></h2>
+        <h2>{storeName || "ShopZone"}</h2>
         <small>Explore More. Shop More.</small>
       </div>
 

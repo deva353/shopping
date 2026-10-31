@@ -327,26 +327,25 @@ function App() {
 
       {/* HEADER */}
 
-      <Header
-        search={search}
-        setSearch={setSearch}
-        cartCount={cartCount}
-        wishlistCount={wishlist.length}
-        setPage={setPage}
-        currentUser={currentUser}
-        onLogout={handleLogout}
-        storeName={storeSettings.storeName}
-      />
+     <Header
+  search={search}
+  setSearch={setSearch}
+  cartCount={cartCount}
+  wishlistCount={wishlist.length}
+  setPage={setPage}
+  currentUser={currentUser}
+  onLogout={handleLogout}
+  storeName={storeSettings.storeName}
+/>
 
-      {/* NAVBAR */}
-
-      <Navbar
-        selectedCategory={selectedCategory}
-        setSelectedCategory={(category) => {
-          setSelectedCategory(category);
-          goHome();
-        }}
-      />
+<Navbar
+  categories={categoryList}
+  selectedCategory={selectedCategory}
+  setSelectedCategory={(category) => {
+    setSelectedCategory(category);
+    goHome();
+  }}
+/>
 
       {/* HOME PAGE */}
 
@@ -354,12 +353,13 @@ function App() {
         <>
           <Hero />
 
-          <Categories
-            setSelectedCategory={(category) => {
-              setSelectedCategory(category);
-              goHome();
-            }}
-          />
+         <Categories
+  categories={categoryList}
+  setSelectedCategory={(category) => {
+    setSelectedCategory(category);
+    goHome();
+  }}
+/>
 
           <main className="products-section" id="products">
 

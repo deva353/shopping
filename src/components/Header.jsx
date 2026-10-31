@@ -6,7 +6,6 @@ import {
   User,
   LogOut
 } from "lucide-react";
-
 function Header({
   search,
   setSearch,
@@ -15,11 +14,18 @@ function Header({
   setPage,
   currentUser,
   onLogout,
-    storeName = "ShopZone",
-}) {
+  storeName = "ShopZone"
+}) 
+
+ {
   return (
     <header className="header">
-        <button onClick={() => setPage("admin-login")}>
+
+       <button
+  type="button"
+  className="admin-button"
+  onClick={() => setPage("admin-login")}
+>
   Admin
 </button>
       <div

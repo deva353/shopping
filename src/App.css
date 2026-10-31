@@ -1212,3 +1212,141 @@
     font-size: 15px;
   }
 }
+
+/* SHOP BY CATEGORY SECTION */
+
+.categories-section {
+  width: 100%;
+  padding: 35px 5%;
+  background-color: #f5f7fa;
+  text-align: center;
+}
+
+.categories-section h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 25px;
+}
+
+.categories-container {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.category-card {
+  min-height: 110px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #222;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+    background-color 0.25s ease;
+}
+
+.category-card:hover {
+  background-color: #2874f0;
+  color: #ffffff;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* TABLET */
+
+@media (max-width: 768px) {
+  .categories-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .categories-section {
+    padding: 25px 4%;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+  .categories-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .category-card {
+    min-height: 85px;
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .categories-section h2 {
+    font-size: 21px;
+  }
+}
+
+/* ADMIN BUTTON */
+
+.admin-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #172b4d;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.admin-button:hover {
+  background: #2874f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25);
+}
+
+.admin-button:active {
+  transform: scale(0.97);
+}
+
+/* ADMIN BUTTON MOBILE */
+
+@media (max-width: 600px) {
+  .admin-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+.header-actions .admin-button,
+.admin-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  background: #172b4d !important;
+  color: #ffffff !important;
+  padding: 11px 22px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  min-width: 90px;
+  transition: 0.3s ease;
+}
+
+.header-actions .admin-button:hover,
+.admin-button:hover {
+  background: #2874f0 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(40, 116, 240, 0.3);
+}

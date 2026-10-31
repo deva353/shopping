@@ -1034,3 +1034,41 @@
     padding: 16px;
   }
 }
+
+/* ADMIN BUTTON */
+
+.admin-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #172b4d;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.admin-button:hover {
+  background: #2874f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25);
+}
+
+.admin-button:active {
+  transform: scale(0.97);
+}
+
+/* ADMIN BUTTON MOBILE */
+
+@media (max-width: 600px) {
+  .admin-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}

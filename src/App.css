@@ -914,3 +914,301 @@
     padding: 15px;
   }
 }
+
+/* AUTHENTICATION PAGE */
+
+.auth-page {
+  min-height: 650px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 15px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 450px;
+  padding: 35px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 25px #00000012;
+}
+
+.auth-heading {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.auth-heading h1 {
+  color: #172337;
+  margin-bottom: 10px;
+}
+
+.auth-heading p {
+  color: #777;
+  font-size: 14px;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-card label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.auth-card input {
+  padding: 13px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  outline-color: #2874f0;
+  width: 100%;
+}
+
+.auth-submit {
+  padding: 14px;
+  background: #2874f0;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+.auth-submit:hover {
+  background: #1559c7;
+}
+
+.auth-error {
+  color: #d32f2f;
+  background: #fff0f0;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 13px;
+}
+
+.auth-switch {
+  margin-top: 25px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.auth-switch button {
+  border: none;
+  background: transparent;
+  color: #2874f0;
+  font-weight: 700;
+  margin-left: 5px;
+}
+
+.auth-back {
+  display: block;
+  margin: 20px auto 0;
+  border: none;
+  background: transparent;
+  color: #2874f0;
+}
+
+/* ACCOUNT PAGE */
+
+.account-page {
+  min-height: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 15px;
+}
+
+.account-card {
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  padding: 35px;
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 5px 25px #00000012;
+}
+
+.account-avatar {
+  width: 90px;
+  height: 90px;
+  background: #e5efff;
+  color: #2874f0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+}
+
+.account-card h1 {
+  margin-bottom: 8px;
+}
+
+.account-card > p {
+  color: #777;
+}
+
+.account-details {
+  margin: 30px 0;
+  text-align: left;
+}
+
+.account-details div {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 5px;
+  border-bottom: 1px solid #eee;
+  overflow-wrap: anywhere;
+}
+
+.account-details svg {
+  color: #2874f0;
+  flex-shrink: 0;
+}
+
+.account-action,
+.logout-button {
+  width: 100%;
+  padding: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 5px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.account-action {
+  background: #2874f0;
+  border: none;
+  color: white;
+}
+
+.logout-button {
+  background: white;
+  color: #e53950;
+  border: 1px solid #e53950;
+}
+
+/* MY ORDERS */
+
+.orders-page {
+  min-height: 600px;
+  margin: 30px 5%;
+  padding: 25px;
+  background: white;
+  border-radius: 10px;
+}
+
+.orders-page h1 {
+  margin-bottom: 25px;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.order-card {
+  padding: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.order-header small {
+  display: block;
+  color: #777;
+  margin-top: 8px;
+}
+
+.order-status {
+  color: #168348;
+  background: #e5f8ed;
+  padding: 7px 12px;
+  border-radius: 20px;
+  height: fit-content;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.order-product {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.order-product img {
+  width: 85px;
+  height: 85px;
+  object-fit: contain;
+}
+
+.order-product h4 {
+  margin-bottom: 8px;
+}
+
+.order-product p {
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+.empty-orders {
+  text-align: center;
+  padding: 70px 20px;
+  color: #777;
+}
+
+.empty-orders h2 {
+  color: #222;
+  margin: 15px 0;
+}
+
+/* MOBILE RESPONSIVENESS */
+
+@media (max-width: 600px) {
+  .auth-card,
+  .account-card {
+    padding: 22px;
+  }
+
+  .orders-page {
+    margin: 15px;
+    padding: 15px;
+  }
+
+  .order-header {
+    flex-direction: column;
+  }
+
+  .order-product {
+    gap: 10px;
+  }
+
+  .order-total {
+    font-size: 15px;
+  }
+}

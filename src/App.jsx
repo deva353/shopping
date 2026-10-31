@@ -10,6 +10,9 @@ import ProductDetails from "./components/ProductDetails";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import OrderSuccess from "./components/OrderSuccess";
+import Account from "./components/Account";
+import Auth from "./components/Auth";
+import MyOrders from "./components/MyOrders";
 import Footer from "./components/Footer";
 
 import useLocalStorage from "./hooks/useLocalStorage";
@@ -28,35 +31,46 @@ function App() {
     []
   );
 
+  const [users, setUsers] = useLocalStorage("shopzone-users", []);
+  const [currentUser, setCurrentUser] = useLocalStorage(
+    "shopzone-current-user",
+    null
+  );
+
+  const [orders, setOrders] = useLocalStorage(
+    "shopzone-orders",
+    []
+  );
+
   const [page, setPage] = useState("home");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [order, setOrder] = useState(null);
 
-  // Add product to cart
+  // Add to cart
   const addToCart = (product) => {
-    setCart((previousCart) => {
-      const existing = previousCart.find(
+    setCart((previous) => {
+      const existing = previous.find(
         (item) => item.id === product.id
       );
 
       if (existing) {
-        return previousCart.map((item) =>
+        return previous.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
 
-      return [...previousCart, { ...product, quantity: 1 }];
+      return [...previous, { ...product, quantity: 1 }];
     });
 
     alert("Product added to cart!");
   };
 
-  // Change quantity
+  // Update quantity
   const updateQuantity = (id, amount) => {
-    setCart((previousCart) =>
-      previousCart
+    setCart((previous) =>
+      previous
         .map((item) =>
           item.id === id
             ? { ...item, quantity: item.quantity + amount }
@@ -66,10 +80,10 @@ function App() {
     );
   };
 
-  // Remove product
+  // Remove from cart
   const removeFromCart = (id) => {
-    setCart((previousCart) =>
-      previousCart.filter((item) => item.id !== id)
+    setCart((previous) =>
+      previous.filter((item) => item.id !== id)
     );
   };
 
@@ -82,11 +96,12 @@ function App() {
     );
   };
 
-  // Search, category and sorting
+  // Filter products
   const filteredProducts = useMemo(() => {
     let result = products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = product.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
       const matchesCategory =
         selectedCategory === "All" ||
@@ -114,13 +129,25 @@ function App() {
     return result;
   }, [search, selectedCategory, sort]);
 
-  // Total cart quantity
   const cartCount = cart.reduce(
     (total, item) => total + item.quantity,
     0
   );
 
-  // Product details
+  // Login
+  const handleLogin = (user) => {
+    setCurrentUser(user);
+    setPage("account");
+  };
+
+  // Logout
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setPage("home");
+    alert("You have logged out successfully.");
+  };
+
+  // Open product
   const openProduct = (product) => {
     setSelectedProduct(product);
     setPage("details");
@@ -134,7 +161,7 @@ function App() {
 
   // Place order
   const placeOrder = (customer) => {
-    if (cart.length === 0) return;
+    if (!currentUser || cart.length === 0) return;
 
     const total = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -143,6 +170,7 @@ function App() {
 
     const newOrder = {
       id: "SZ" + Date.now(),
+      userId: currentUser.id,
       customer,
       items: cart,
       total,
@@ -150,6 +178,7 @@ function App() {
     };
 
     setOrder(newOrder);
+    setOrders((previous) => [newOrder, ...previous]);
     setCart([]);
     setPage("success");
   };
@@ -163,6 +192,8 @@ function App() {
         cartCount={cartCount}
         wishlistCount={wishlist.length}
         setPage={setPage}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       <Navbar
@@ -181,12 +212,6 @@ function App() {
             setSelectedCategory={(category) => {
               setSelectedCategory(category);
               goHome();
-
-              setTimeout(() => {
-                document.getElementById("products")?.scrollIntoView({
-                  behavior: "smooth"
-                });
-              }, 0);
             }}
           />
 
@@ -222,10 +247,7 @@ function App() {
                   />
                 ))
               ) : (
-                <div className="no-products">
-                  <h2>No Products Found</h2>
-                  <p>Try another product name or category.</p>
-                </div>
+                <p>No products found.</p>
               )}
             </div>
           </main>
@@ -245,7 +267,9 @@ function App() {
           cart={cart}
           updateQuantity={updateQuantity}
           removeFromCart={removeFromCart}
-          goToCheckout={() => setPage("checkout")}
+          goToCheckout={() => setPage(
+            currentUser ? "checkout" : "login"
+          )}
           goHome={goHome}
         />
       )}
@@ -255,32 +279,81 @@ function App() {
           <h2>My Wishlist</h2>
 
           <div className="product-grid">
-            {wishlist.length > 0 ? (
-              products
-                .filter((product) => wishlist.includes(product.id))
-                .map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    addToCart={addToCart}
-                    wishlist={wishlist}
-                    toggleWishlist={toggleWishlist}
-                    openProduct={openProduct}
-                  />
-                ))
-            ) : (
-              <p>Your wishlist is empty.</p>
-            )}
+            {products
+              .filter((product) => wishlist.includes(product.id))
+              .map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  addToCart={addToCart}
+                  wishlist={wishlist}
+                  toggleWishlist={toggleWishlist}
+                  openProduct={openProduct}
+                />
+              ))}
           </div>
         </section>
       )}
 
-      {page === "checkout" && (
-        <Checkout
-          cart={cart}
-          onPlaceOrder={placeOrder}
-          goBack={() => setPage("cart")}
+      {page === "login" && (
+        <Auth
+          users={users}
+          setUsers={setUsers}
+          onLogin={handleLogin}
+          goHome={goHome}
         />
+      )}
+
+      {page === "account" && (
+        currentUser ? (
+          <Account
+            user={currentUser}
+            onLogout={handleLogout}
+            openOrders={() => setPage("orders")}
+          />
+        ) : (
+          <Auth
+            users={users}
+            setUsers={setUsers}
+            onLogin={handleLogin}
+            goHome={goHome}
+          />
+        )
+      )}
+
+      {page === "orders" && (
+        currentUser ? (
+          <MyOrders
+            orders={orders.filter(
+              (item) => item.userId === currentUser.id
+            )}
+            goBack={() => setPage("account")}
+          />
+        ) : (
+          <Auth
+            users={users}
+            setUsers={setUsers}
+            onLogin={handleLogin}
+            goHome={goHome}
+          />
+        )
+      )}
+
+      {page === "checkout" && (
+        currentUser ? (
+          <Checkout
+            cart={cart}
+            onPlaceOrder={placeOrder}
+            goBack={() => setPage("cart")}
+          />
+        ) : (
+          <Auth
+            users={users}
+            setUsers={setUsers}
+            onLogin={handleLogin}
+            goHome={goHome}
+          />
+        )
       )}
 
       {page === "success" && (
@@ -290,34 +363,10 @@ function App() {
         />
       )}
 
-      {page === "login" && (
-        <section className="login-page">
-          <div className="login-card">
-            <h2>Welcome to ShopZone</h2>
-            <p>Authentication will be integrated in a later stage.</p>
-
-            <input type="email" placeholder="Enter your email" />
-            <input type="password" placeholder="Enter your password" />
-
-            <button
-              onClick={() =>
-                alert("Demo only. Real authentication is not connected.")
-              }
-            >
-              Login
-            </button>
-
-            <button className="back-button" onClick={goHome}>
-              Back to Shopping
-            </button>
-          </div>
-        </section>
-      )}
-
       <Footer />
-
     </div>
   );
 }
 
 export default App;
+

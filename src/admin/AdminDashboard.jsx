@@ -20,21 +20,27 @@ import {
 import AdminSidebar from "./AdminSidebar";
 import AdminHeader from "./AdminHeader";
 import "./Admin.css";
-<AdminDashboard
-  products={productList}
-  setProducts={setProductList}
-  users={users}
-  orders={orders}
-  onLogout={handleAdminLogout}
-  goHome={goHome}
-/>
+function AdminDashboard({
+  products = [],
+  setProducts,
+  users = [],
+  orders = [],
+  setOrders,
+  onLogout,
+  goHome
+}) 
 
-{
+ {
+  // ---------------- STATES ----------------
+
   const [activePage, setActivePage] = useState("dashboard");
-
-  // Product management states
+const [searchOrder, setSearchOrder] = useState("");
+const [searchCustomer, setSearchCustomer] = useState("");
+const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [searchProduct, setSearchProduct] = useState("");
+
   const [showProductForm, setShowProductForm] = useState(false);
+
   const [editingProductId, setEditingProductId] = useState(null);
 
   const emptyProduct = {
@@ -50,7 +56,8 @@ import "./Admin.css";
 
   const [productForm, setProductForm] = useState(emptyProduct);
 
-  // Dashboard calculations
+  // ---------------- DASHBOARD CALCULATIONS ----------------
+
   const totalRevenue = orders.reduce(
     (total, order) => total + Number(order.total || 0),
     0
@@ -89,23 +96,26 @@ import "./Admin.css";
 
   const recentOrders = [...orders].slice(0, 5);
 
-  // Search products
+  // ---------------- SEARCH PRODUCTS ----------------
+
   const filteredAdminProducts = useMemo(() => {
     return products.filter((product) =>
-      product.name
+      String(product.name || "")
         .toLowerCase()
         .includes(searchProduct.toLowerCase())
     );
   }, [products, searchProduct]);
 
-  // Open add product form
+  // ---------------- ADD PRODUCT ----------------
+
   const handleAddProduct = () => {
     setEditingProductId(null);
-    setProductForm(emptyProduct);
+    setProductForm({ ...emptyProduct });
     setShowProductForm(true);
   };
 
-  // Handle form input
+  // ---------------- HANDLE FORM INPUT ----------------
+
   const handleProductInput = (e) => {
     const { name, value } = e.target;
 
@@ -115,9 +125,297 @@ import "./Admin.css";
     }));
   };
 
-  // Save product
+  // ---------------- SAVE PRODUCT ----------------
+  const handleOrderStatus = (orderId, newStatus) => {
+  setOrders((previous) =>
+    previous.map((order) =>
+      order.id === orderId
+        ? { ...order, status: newStatus }
+        : order
+    )
+  );
+
+  alert("Order status updated successfully!");
+};
+
+const renderCustomerManagement = () => {
+  const filteredCustomers = users.filter((user) => {
+    const name = String(user.name || "").toLowerCase();
+    const email = String(user.email || "").toLowerCase();
+    const search = searchCustomer.toLowerCase();
+
+    return name.includes(search) || email.includes(search);
+  });
+
+  return (
+    <div className="admin-products-page">
+
+      <div className="admin-products-heading">
+        <div>
+          <h2>Customer Management</h2>
+          <p>View registered customers and their purchase history.</p>
+        </div>
+      </div>
+
+      {/* SEARCH CUSTOMERS */}
+
+      <div className="admin-product-search">
+        <Search size={19} />
+
+        <input
+          type="text"
+          value={searchCustomer}
+          onChange={(e) => setSearchCustomer(e.target.value)}
+          placeholder="Search by customer name or email..."
+        />
+      </div>
+
+      {/* CUSTOMER TABLE */}
+
+      <div className="admin-products-table-panel">
+
+        <div className="admin-products-table-heading">
+          <h3>Registered Customers</h3>
+          <span>{filteredCustomers.length} customers</span>
+        </div>
+
+        {filteredCustomers.length === 0 ? (
+          <div className="admin-empty">
+            <Users size={40} />
+            <p>No customers found.</p>
+          </div>
+        ) : (
+          <div className="admin-table-wrapper">
+
+            <table className="admin-table">
+
+              <thead>
+                <tr>
+                  <th>Customer ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Total Orders</th>
+                  <th>Total Spending</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredCustomers.map((user) => {
+                  const customerOrders = orders.filter(
+                    (order) =>
+                      String(order.userId) === String(user.id)
+                  );
+
+                  const totalSpent = customerOrders.reduce(
+                    (total, order) =>
+                      total + Number(order.total || 0),
+                    0
+                  );
+
+                  const isSelected =
+                    String(selectedCustomerId) === String(user.id);
+
+                  return (
+                    <>
+                      <tr key={user.id}>
+                        <td>{user.id}</td>
+
+                        <td>{user.name || "Customer"}</td>
+
+                        <td>{user.email || "No email"}</td>
+
+                        <td>{customerOrders.length}</td>
+
+                        <td>
+                          ₹{totalSpent.toLocaleString("en-IN")}
+                        </td>
+
+                        <td>
+                          <button
+                            type="button"
+                            className="admin-edit-btn"
+                            onClick={() =>
+                              setSelectedCustomerId(
+                                isSelected ? null : user.id
+                              )
+                            }
+                          >
+                            {isSelected ? "Hide" : "View Orders"}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {isSelected && (
+                        <tr key={`${user.id}-orders`}>
+                          <td colSpan="6">
+                            <div className="customer-order-details">
+                              <h4>
+                                Order History: {user.name || "Customer"}
+                              </h4>
+
+                              {customerOrders.length === 0 ? (
+                                <p>This customer has not placed any orders.</p>
+                              ) : (
+                                customerOrders.map((order) => (
+                                  <div
+                                    className="customer-order-row"
+                                    key={order.id}
+                                  >
+                                    <span>
+                                      {order.id}
+                                    </span>
+
+                                    <span>
+                                      ₹{Number(order.total || 0).toLocaleString("en-IN")}
+                                    </span>
+
+                                    <span>{order.date}</span>
+
+                                    <span>
+                                      {order.status || "Placed"}
+                                    </span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })}
+              </tbody>
+
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const renderOrderManagement = () => {
+  const filteredOrders = orders.filter((order) => {
+    const orderId = String(order.id || "").toLowerCase();
+    const customerName = String(
+      order.customer?.name || ""
+    ).toLowerCase();
+
+    const search = searchOrder.toLowerCase();
+
+    return (
+      orderId.includes(search) ||
+      customerName.includes(search)
+    );
+  });
+
+  return (
+    <div className="admin-products-page">
+
+      <div className="admin-products-heading">
+        <div>
+          <h2>Order Management</h2>
+          <p>View customer orders and update delivery status.</p>
+        </div>
+      </div>
+
+      <div className="admin-product-search">
+        <Search size={19} />
+
+        <input
+          type="text"
+          value={searchOrder}
+          onChange={(e) => setSearchOrder(e.target.value)}
+          placeholder="Search by order ID or customer name..."
+        />
+      </div>
+
+      <div className="admin-products-table-panel">
+
+        <div className="admin-products-table-heading">
+          <h3>All Orders</h3>
+          <span>{filteredOrders.length} orders</span>
+        </div>
+
+        {filteredOrders.length === 0 ? (
+          <div className="admin-empty">
+            <ShoppingBag size={40} />
+            <p>No orders found.</p>
+          </div>
+        ) : (
+          <div className="admin-table-wrapper">
+            <table className="admin-table">
+
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredOrders.map((order) => (
+                  <tr key={order.id}>
+
+                    <td>{order.id}</td>
+
+                    <td>
+                      {order.customer?.name || "Customer"}
+                    </td>
+
+                    <td>
+                      {order.items?.length || 0} products
+                    </td>
+
+                    <td>
+                      ₹{Number(order.total || 0).toLocaleString("en-IN")}
+                    </td>
+
+                    <td>{order.date}</td>
+
+                    <td>
+                      <select
+                        value={order.status || "Placed"}
+                        onChange={(e) =>
+                          handleOrderStatus(
+                            order.id,
+                            e.target.value
+                          )
+                        }
+                      >
+                        <option value="Placed">Placed</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+
+            </table>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+};
+
   const handleSaveProduct = (e) => {
     e.preventDefault();
+
+    if (typeof setProducts !== "function") {
+      alert("Product update function is missing. Check App.jsx.");
+      return;
+    }
 
     if (
       !productForm.name.trim() ||
@@ -130,6 +428,8 @@ import "./Admin.css";
 
     const price = Number(productForm.price);
     const oldPrice = Number(productForm.oldPrice);
+    const rating = Number(productForm.rating);
+    const discount = Number(productForm.discount || 0);
 
     if (
       !Number.isFinite(price) ||
@@ -146,19 +446,38 @@ import "./Admin.css";
       return;
     }
 
+    if (
+      !Number.isFinite(rating) ||
+      rating < 0 ||
+      rating > 5
+    ) {
+      alert("Rating must be between 0 and 5.");
+      return;
+    }
+
+    if (
+      !Number.isFinite(discount) ||
+      discount < 0 ||
+      discount > 100
+    ) {
+      alert("Discount must be between 0 and 100.");
+      return;
+    }
+
     const updatedProduct = {
       id: editingProductId ?? Date.now(),
       name: productForm.name.trim(),
       category: productForm.category,
       price,
       oldPrice,
-      rating: Number(productForm.rating) || 0,
-      discount: Number(productForm.discount) || 0,
+      rating,
+      discount,
       image: productForm.image.trim(),
       description: productForm.description.trim()
     };
 
     if (editingProductId !== null) {
+      // Update existing product
       setProducts((previous) =>
         previous.map((product) =>
           product.id === editingProductId
@@ -169,6 +488,7 @@ import "./Admin.css";
 
       alert("Product updated successfully!");
     } else {
+      // Add new product
       setProducts((previous) => [
         updatedProduct,
         ...previous
@@ -177,12 +497,13 @@ import "./Admin.css";
       alert("Product added successfully!");
     }
 
-    setProductForm(emptyProduct);
+    setProductForm({ ...emptyProduct });
     setEditingProductId(null);
     setShowProductForm(false);
   };
 
-  // Edit product
+  // ---------------- EDIT PRODUCT ----------------
+
   const handleEditProduct = (product) => {
     setEditingProductId(product.id);
 
@@ -200,8 +521,14 @@ import "./Admin.css";
     setShowProductForm(true);
   };
 
-  // Delete product
+  // ---------------- DELETE PRODUCT ----------------
+
   const handleDeleteProduct = (id) => {
+    if (typeof setProducts !== "function") {
+      alert("Product update function is missing. Check App.jsx.");
+      return;
+    }
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this product?"
     );
@@ -215,14 +542,16 @@ import "./Admin.css";
     alert("Product deleted successfully!");
   };
 
-  // Cancel form
+  // ---------------- CANCEL PRODUCT FORM ----------------
+
   const handleCancelProductForm = () => {
     setShowProductForm(false);
     setEditingProductId(null);
-    setProductForm(emptyProduct);
+    setProductForm({ ...emptyProduct });
   };
 
-  // Product management page
+  // ---------------- PRODUCT MANAGEMENT ----------------
+
   const renderProductManagement = () => (
     <div className="admin-products-page">
 
@@ -241,7 +570,7 @@ import "./Admin.css";
         </button>
       </div>
 
-      {/* Product form */}
+      {/* ADD AND EDIT PRODUCT FORM */}
 
       {showProductForm && (
         <form
@@ -268,6 +597,7 @@ import "./Admin.css";
 
             <div className="admin-form-group">
               <label>Product Name</label>
+
               <input
                 type="text"
                 name="name"
@@ -280,6 +610,7 @@ import "./Admin.css";
 
             <div className="admin-form-group">
               <label>Category</label>
+
               <select
                 name="category"
                 value={productForm.category}
@@ -294,6 +625,7 @@ import "./Admin.css";
 
             <div className="admin-form-group">
               <label>Selling Price (₹)</label>
+
               <input
                 type="number"
                 name="price"
@@ -307,6 +639,7 @@ import "./Admin.css";
 
             <div className="admin-form-group">
               <label>Old Price (₹)</label>
+
               <input
                 type="number"
                 name="oldPrice"
@@ -320,6 +653,7 @@ import "./Admin.css";
 
             <div className="admin-form-group">
               <label>Rating</label>
+
               <input
                 type="number"
                 name="rating"
@@ -333,6 +667,7 @@ import "./Admin.css";
 
             <div className="admin-form-group">
               <label>Discount (%)</label>
+
               <input
                 type="number"
                 name="discount"
@@ -346,6 +681,7 @@ import "./Admin.css";
 
             <div className="admin-form-group admin-full-width">
               <label>Product Image URL</label>
+
               <input
                 type="url"
                 name="image"
@@ -357,6 +693,7 @@ import "./Admin.css";
 
             <div className="admin-form-group admin-full-width">
               <label>Description</label>
+
               <textarea
                 name="description"
                 value={productForm.description}
@@ -369,6 +706,7 @@ import "./Admin.css";
           </div>
 
           <div className="admin-form-actions">
+
             <button
               type="button"
               className="admin-cancel-btn"
@@ -382,15 +720,17 @@ import "./Admin.css";
               className="admin-save-btn"
             >
               <Save size={17} />
+
               {editingProductId !== null
                 ? "Update Product"
                 : "Save Product"}
             </button>
+
           </div>
         </form>
       )}
 
-      {/* Search products */}
+      {/* SEARCH PRODUCTS */}
 
       <div className="admin-product-search">
         <Search size={19} />
@@ -403,9 +743,10 @@ import "./Admin.css";
         />
       </div>
 
-      {/* Product table */}
+      {/* PRODUCT TABLE */}
 
       <div className="admin-products-table-panel">
+
         <div className="admin-products-table-heading">
           <h3>All Products</h3>
           <span>{filteredAdminProducts.length} products</span>
@@ -418,7 +759,9 @@ import "./Admin.css";
           </div>
         ) : (
           <div className="admin-table-wrapper">
+
             <table className="admin-table">
+
               <thead>
                 <tr>
                   <th>Product</th>
@@ -433,8 +776,10 @@ import "./Admin.css";
               <tbody>
                 {filteredAdminProducts.map((product) => (
                   <tr key={product.id}>
+
                     <td>
                       <div className="admin-product-info">
+
                         {product.image ? (
                           <img
                             src={product.image}
@@ -464,7 +809,9 @@ import "./Admin.css";
 
                     <td>
                       <div className="admin-product-actions">
+
                         <button
+                          type="button"
                           className="admin-edit-btn"
                           onClick={() => handleEditProduct(product)}
                           title="Edit product"
@@ -473,31 +820,47 @@ import "./Admin.css";
                         </button>
 
                         <button
+                          type="button"
                           className="admin-delete-btn"
                           onClick={() => handleDeleteProduct(product.id)}
                           title="Delete product"
                         >
                           <Trash2 size={17} />
                         </button>
+
                       </div>
                     </td>
+
                   </tr>
                 ))}
               </tbody>
+
             </table>
           </div>
         )}
       </div>
+
     </div>
   );
 
-  // Dashboard content
+  // ---------------- DASHBOARD CONTENT ----------------
+
   const renderContent = () => {
+
+    // Products page
     if (activePage === "products") {
       return renderProductManagement();
     }
+    if (activePage === "orders") {
+  return renderOrderManagement();
+}
+if (activePage === "customers") {
+  return renderCustomerManagement();
+}
 
+    // Other placeholder pages
     if (activePage !== "dashboard") {
+
       const sectionNames = {
         orders: "Order Management",
         customers: "Customer Management",
@@ -508,20 +871,26 @@ import "./Admin.css";
       return (
         <div className="admin-placeholder">
           <Package size={45} />
-          <h2>{sectionNames[activePage]}</h2>
+
+          <h2>
+            {sectionNames[activePage] || "Admin Section"}
+          </h2>
+
           <p>
-            This management module will be developed in
-            the next implementation step.
+            This management module will be developed
+            in the next implementation step.
           </p>
         </div>
       );
     }
 
+    // Main dashboard
     return (
       <>
         <div className="admin-welcome">
           <div>
             <h2>Welcome to ShopZone Admin!</h2>
+
             <p>
               Here is an overview of your shopping business.
             </p>
@@ -532,12 +901,18 @@ import "./Admin.css";
           </div>
         </div>
 
+        {/* STATISTICS */}
+
         <div className="admin-stats-grid">
+
           {stats.map((stat) => {
             const Icon = stat.icon;
 
             return (
-              <div className="admin-stat-card" key={stat.title}>
+              <div
+                className="admin-stat-card"
+                key={stat.title}
+              >
                 <div className={`stat-icon ${stat.color}`}>
                   <Icon size={25} />
                 </div>
@@ -549,13 +924,23 @@ import "./Admin.css";
               </div>
             );
           })}
+
         </div>
 
+        {/* DASHBOARD CONTENT */}
+
         <div className="admin-dashboard-content">
+
+          {/* RECENT ORDERS */}
+
           <div className="admin-orders-panel">
+
             <div className="panel-heading">
               <h2>Recent Orders</h2>
-              <button onClick={() => setActivePage("orders")}>
+
+              <button
+                onClick={() => setActivePage("orders")}
+              >
                 View All
               </button>
             </div>
@@ -567,7 +952,9 @@ import "./Admin.css";
               </div>
             ) : (
               <div className="admin-table-wrapper">
+
                 <table className="admin-table">
+
                   <thead>
                     <tr>
                       <th>Order ID</th>
@@ -581,33 +968,45 @@ import "./Admin.css";
                   <tbody>
                     {recentOrders.map((order) => (
                       <tr key={order.id}>
+
                         <td>{order.id}</td>
+
                         <td>
                           {order.customer?.name || "Customer"}
                         </td>
+
                         <td>
-                          ₹{Number(order.total).toLocaleString("en-IN")}
+                          ₹{Number(order.total || 0).toLocaleString("en-IN")}
                         </td>
+
                         <td>{order.date}</td>
+
                         <td>
                           <span className="status-badge">
                             <CheckCircle size={13} />
                             Placed
                           </span>
                         </td>
+
                       </tr>
                     ))}
                   </tbody>
+
                 </table>
               </div>
             )}
+
           </div>
 
+          {/* BUSINESS SUMMARY */}
+
           <div className="admin-summary-panel">
+
             <h2>Business Summary</h2>
 
             <div className="summary-item">
               <Package size={20} />
+
               <div>
                 <p>Available Products</p>
                 <strong>{totalProducts}</strong>
@@ -616,6 +1015,7 @@ import "./Admin.css";
 
             <div className="summary-item">
               <Users size={20} />
+
               <div>
                 <p>Registered Customers</p>
                 <strong>{totalCustomers}</strong>
@@ -624,6 +1024,7 @@ import "./Admin.css";
 
             <div className="summary-item">
               <Clock size={20} />
+
               <div>
                 <p>Orders Placed</p>
                 <strong>{totalOrders}</strong>
@@ -632,21 +1033,28 @@ import "./Admin.css";
 
             <div className="summary-item">
               <IndianRupee size={20} />
+
               <div>
                 <p>Total Revenue</p>
+
                 <strong>
                   ₹{totalRevenue.toLocaleString("en-IN")}
                 </strong>
               </div>
             </div>
+
           </div>
+
         </div>
       </>
     );
   };
 
+  // ---------------- MAIN RETURN ----------------
+
   return (
     <div className="admin-layout">
+
       <AdminSidebar
         activePage={activePage}
         setActivePage={setActivePage}
@@ -655,15 +1063,17 @@ import "./Admin.css";
       />
 
       <main className="admin-main">
+
         <AdminHeader activePage={activePage} />
 
         <div className="admin-content">
           {renderContent()}
         </div>
+
       </main>
+
     </div>
   );
 }
 
 export default AdminDashboard;
-

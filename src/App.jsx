@@ -27,6 +27,10 @@ function App() {
   // ---------------- STATE DECLARATIONS ----------------
 
   const [search, setSearch] = useState("");
+  const [productList, setProductList] = useLocalStorage(
+  "shopzone-products",
+  products
+);
   
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sort, setSort] = useState("default");
@@ -198,15 +202,15 @@ function App() {
       0
     );
 
-    const newOrder = {
-      id: "SZ" + Date.now(),
-      userId: currentUser.id,
-      customer,
-      items: cart,
-      total,
-      date: new Date().toLocaleDateString()
-    };
-
+   const newOrder = {
+  id: "SZ" + Date.now(),
+  userId: currentUser.id,
+  customer,
+  items: cart,
+  total,
+  date: new Date().toLocaleDateString(),
+  status: "Placed"
+};
     setOrder(newOrder);
     setOrders((previous) => [newOrder, ...previous]);
     setCart([]);
@@ -238,12 +242,14 @@ function App() {
 
     return (
       <AdminDashboard
-        products={products}
-        users={users}
-        orders={orders}
-        onLogout={handleAdminLogout}
-        goHome={goHome}
-      />
+  products={productList}
+  setProducts={setProductList}
+  users={users}
+  orders={orders}
+   setOrders={setOrders}
+  onLogout={handleAdminLogout}
+  goHome={goHome}
+/>
     );
   }
 

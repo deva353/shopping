@@ -762,3 +762,34 @@
     min-width: 700px;
   }
 }
+
+/* CUSTOMER MANAGEMENT */
+
+.customer-order-details {
+  padding: 15px;
+  background: #f7f9fc;
+  border-radius: 8px;
+}
+
+.customer-order-details h4 {
+  margin-bottom: 15px;
+  font-size: 15px;
+}
+
+.customer-order-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 650px) {
+  .customer-order-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}

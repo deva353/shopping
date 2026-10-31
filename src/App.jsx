@@ -27,6 +27,7 @@ function App() {
   // ---------------- STATE DECLARATIONS ----------------
 
   const [search, setSearch] = useState("");
+  
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sort, setSort] = useState("default");
 
@@ -150,7 +151,7 @@ function App() {
   // ---------------- PRODUCT FILTERING ----------------
 
   const filteredProducts = useMemo(() => {
-    let result = products.filter((product) => {
+    let result = productList.filter((product) => {
       const matchesSearch = product.name
         .toLowerCase()
         .includes(search.toLowerCase());
@@ -179,7 +180,7 @@ function App() {
     }
 
     return result;
-  }, [search, selectedCategory, sort]);
+  }, [search, selectedCategory, sort, productList]);
 
   // Cart count
   const cartCount = cart.reduce(
@@ -351,26 +352,26 @@ function App() {
 
       {/* WISHLIST */}
 
-      {page === "wishlist" && (
-        <section className="products-section">
-          <h2>My Wishlist</h2>
+     {page === "wishlist" && (
+  <section className="products-section">
+    <h2>My Wishlist</h2>
 
-          <div className="product-grid">
-            {products
-              .filter((product) => wishlist.includes(product.id))
-              .map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  addToCart={addToCart}
-                  wishlist={wishlist}
-                  toggleWishlist={toggleWishlist}
-                  openProduct={openProduct}
-                />
-              ))}
-          </div>
-        </section>
-      )}
+    <div className="product-grid">
+      {productList
+        .filter((product) => wishlist.includes(product.id))
+        .map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            addToCart={addToCart}
+            wishlist={wishlist}
+            toggleWishlist={toggleWishlist}
+            openProduct={openProduct}
+          />
+        ))}
+    </div>
+  </section>
+)}
 
       {/* LOGIN AND REGISTER */}
 

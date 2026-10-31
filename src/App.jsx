@@ -15,12 +15,17 @@ import Auth from "./components/Auth";
 import MyOrders from "./components/MyOrders";
 import Footer from "./components/Footer";
 
+import AdminLogin from "./admin/AdminLogin";
+import AdminDashboard from "./admin/AdminDashboard";
+
 import useLocalStorage from "./hooks/useLocalStorage";
 import products from "./data/products";
 
 import "./App.css";
 
 function App() {
+  // ---------------- STATE DECLARATIONS ----------------
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sort, setSort] = useState("default");
@@ -32,6 +37,7 @@ function App() {
   );
 
   const [users, setUsers] = useLocalStorage("shopzone-users", []);
+
   const [currentUser, setCurrentUser] = useLocalStorage(
     "shopzone-current-user",
     null
@@ -42,11 +48,56 @@ function App() {
     []
   );
 
+  const [isAdmin, setIsAdmin] = useLocalStorage(
+    "shopzone-admin-session",
+    false
+  );
+
   const [page, setPage] = useState("home");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [order, setOrder] = useState(null);
 
-  // Add to cart
+  // ---------------- NAVIGATION FUNCTIONS ----------------
+
+  const goHome = () => {
+    setPage("home");
+    setSelectedProduct(null);
+  };
+
+  // ---------------- ADMIN FUNCTIONS ----------------
+
+  const handleAdminLogin = () => {
+    setIsAdmin(true);
+    setPage("admin");
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdmin(false);
+    setPage("home");
+  };
+
+  // ---------------- CUSTOMER FUNCTIONS ----------------
+
+  // Login
+  const handleLogin = (user) => {
+    setCurrentUser(user);
+    setPage("account");
+  };
+
+  // Logout
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setPage("home");
+    alert("You have logged out successfully.");
+  };
+
+  // Open product details
+  const openProduct = (product) => {
+    setSelectedProduct(product);
+    setPage("details");
+  };
+
+  // Add product to cart
   const addToCart = (product) => {
     setCart((previous) => {
       const existing = previous.find(
@@ -67,7 +118,7 @@ function App() {
     alert("Product added to cart!");
   };
 
-  // Update quantity
+  // Update cart quantity
   const updateQuantity = (id, amount) => {
     setCart((previous) =>
       previous
@@ -80,7 +131,7 @@ function App() {
     );
   };
 
-  // Remove from cart
+  // Remove product from cart
   const removeFromCart = (id) => {
     setCart((previous) =>
       previous.filter((item) => item.id !== id)
@@ -96,7 +147,8 @@ function App() {
     );
   };
 
-  // Filter products
+  // ---------------- PRODUCT FILTERING ----------------
+
   const filteredProducts = useMemo(() => {
     let result = products.filter((product) => {
       const matchesSearch = product.name
@@ -129,37 +181,14 @@ function App() {
     return result;
   }, [search, selectedCategory, sort]);
 
+  // Cart count
   const cartCount = cart.reduce(
     (total, item) => total + item.quantity,
     0
   );
 
-  // Login
-  const handleLogin = (user) => {
-    setCurrentUser(user);
-    setPage("account");
-  };
+  // ---------------- PLACE ORDER ----------------
 
-  // Logout
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setPage("home");
-    alert("You have logged out successfully.");
-  };
-
-  // Open product
-  const openProduct = (product) => {
-    setSelectedProduct(product);
-    setPage("details");
-  };
-
-  // Go home
-  const goHome = () => {
-    setPage("home");
-    setSelectedProduct(null);
-  };
-
-  // Place order
   const placeOrder = (customer) => {
     if (!currentUser || cart.length === 0) return;
 
@@ -183,6 +212,42 @@ function App() {
     setPage("success");
   };
 
+  // ---------------- ADMIN LOGIN PAGE ----------------
+
+  if (page === "admin-login") {
+    return (
+      <AdminLogin
+        onAdminLogin={handleAdminLogin}
+        goHome={goHome}
+      />
+    );
+  }
+
+  // ---------------- ADMIN DASHBOARD ----------------
+
+  if (page === "admin") {
+    if (!isAdmin) {
+      return (
+        <AdminLogin
+          onAdminLogin={handleAdminLogin}
+          goHome={goHome}
+        />
+      );
+    }
+
+    return (
+      <AdminDashboard
+        products={products}
+        users={users}
+        orders={orders}
+        onLogout={handleAdminLogout}
+        goHome={goHome}
+      />
+    );
+  }
+
+  // ---------------- CUSTOMER WEBSITE ----------------
+
   return (
     <div className="app">
 
@@ -204,6 +269,8 @@ function App() {
         }}
       />
 
+      {/* HOME PAGE */}
+
       {page === "home" && (
         <>
           <Hero />
@@ -216,10 +283,13 @@ function App() {
           />
 
           <main className="products-section" id="products">
+
             <div className="section-heading">
               <div>
                 <h2>Explore Our Products</h2>
-                <p>Discover the best products at amazing prices.</p>
+                <p>
+                  Discover the best products at amazing prices.
+                </p>
               </div>
 
               <select
@@ -250,9 +320,12 @@ function App() {
                 <p>No products found.</p>
               )}
             </div>
+
           </main>
         </>
       )}
+
+      {/* PRODUCT DETAILS */}
 
       {page === "details" && (
         <ProductDetails
@@ -262,17 +335,21 @@ function App() {
         />
       )}
 
+      {/* CART */}
+
       {page === "cart" && (
         <Cart
           cart={cart}
           updateQuantity={updateQuantity}
           removeFromCart={removeFromCart}
-          goToCheckout={() => setPage(
-            currentUser ? "checkout" : "login"
-          )}
+          goToCheckout={() =>
+            setPage(currentUser ? "checkout" : "login")
+          }
           goHome={goHome}
         />
       )}
+
+      {/* WISHLIST */}
 
       {page === "wishlist" && (
         <section className="products-section">
@@ -295,6 +372,8 @@ function App() {
         </section>
       )}
 
+      {/* LOGIN AND REGISTER */}
+
       {page === "login" && (
         <Auth
           users={users}
@@ -303,6 +382,8 @@ function App() {
           goHome={goHome}
         />
       )}
+
+      {/* CUSTOMER ACCOUNT */}
 
       {page === "account" && (
         currentUser ? (
@@ -320,6 +401,8 @@ function App() {
           />
         )
       )}
+
+      {/* MY ORDERS */}
 
       {page === "orders" && (
         currentUser ? (
@@ -339,6 +422,8 @@ function App() {
         )
       )}
 
+      {/* CHECKOUT */}
+
       {page === "checkout" && (
         currentUser ? (
           <Checkout
@@ -356,6 +441,8 @@ function App() {
         )
       )}
 
+      {/* ORDER SUCCESS */}
+
       {page === "success" && (
         <OrderSuccess
           order={order}
@@ -364,9 +451,9 @@ function App() {
       )}
 
       <Footer />
+
     </div>
   );
 }
 
 export default App;
-

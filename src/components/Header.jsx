@@ -18,9 +18,13 @@ function Header({
 }) {
   return (
     <header className="header">
+        <button onClick={() => setPage("admin-login")}>
+  Admin
+</button>
       <div
         className="header-logo"
         onClick={() => setPage("home")}
+        
       >
         <h2>Shop<span>Zone</span></h2>
         <small>Explore More. Shop More.</small>
